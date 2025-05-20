@@ -168,22 +168,41 @@ export default class WeeklyTimesheet extends LightningElement {
             }));
             return;
         }
-
+    
         let hasValidEntry = false;
-        console.log('this.entries:426=>',this.entries);
+        console.log('this.entries:426=>', this.entries);
+        
+        // Create a new object with restructured entries
+        const formattedEntries = {};
+        
         for (let pid in this.entries) {
-            console.log('pid:427=>',pid);
-            console.log('this.entries[pid]:428=>',this.entries[pid]);
+            console.log('pid:427=>', pid);
+            const projectEntry = this.entries[pid];
+            console.log('projectEntry:428=>', projectEntry);
             
             const total = this.getTotalHoursForProject(pid);
-            console.log('total:164=>',total);
+            console.log('total:164=>', total);
             
-            const desc = this.entries[pid]?.description?.trim();
-            console.log('desc:167=>',desc);
+            const desc = projectEntry?.description?.trim();
+            console.log('desc:167=>', desc);
             
             if (total > 0 && desc) {
                 console.log('inside if:136');
                 hasValidEntry = true;
+                
+                // Create a new entry with hours separated from metadata
+                formattedEntries[pid] = {
+                    description: desc,
+                    hours: {}
+                };
+                
+                // Add all date entries to the hours object
+                for (let key in projectEntry) {
+                    if (key !== 'description' && projectEntry[key] !== null && projectEntry[key] !== undefined) {
+                        formattedEntries[pid].hours[key] = projectEntry[key];
+                    }
+                }
+                
             } else if (total > 0 && !desc) {
                 console.log('inside else if:139');
                 this.dispatchEvent(new ShowToastEvent({
@@ -194,7 +213,7 @@ export default class WeeklyTimesheet extends LightningElement {
                 return;
             }
         }
-
+    
         if (!hasValidEntry) {
             console.log('inside has valid:150');
             this.dispatchEvent(new ShowToastEvent({
@@ -204,15 +223,16 @@ export default class WeeklyTimesheet extends LightningElement {
             }));
             return;
         }
-
+    
         try {
-            console.log('this.entries:154=>',this.entries);
-            console.log('this.currentWeekStart:155=>',this.currentWeekStart);
-            console.log('this.currentWeekStart:156=>',this.currentWeekStart.toISOString().split('T')[0]);
+            console.log('formattedEntries:154=>', formattedEntries);
+            console.log('this.currentWeekStart:155=>', this.currentWeekStart);
+            const weekStartStr = this.currentWeekStart.toISOString().split('T')[0];
+            console.log('weekStartStr:156=>', weekStartStr);
             
             await saveTimesheet({
-                weekStart: this.currentWeekStart.toISOString().split('T')[0],
-                entries: this.entries
+                weekStart: weekStartStr,
+                entries: formattedEntries
             });
             console.log('submitted success');
             
@@ -223,7 +243,7 @@ export default class WeeklyTimesheet extends LightningElement {
                 variant: 'success'
             }));
         } catch (err) {
-            console.log('error:175=>',err);
+            console.log('error:175=>', err);
             this.dispatchEvent(new ShowToastEvent({
                 title: 'Error',
                 message: err.body?.message || err.message,

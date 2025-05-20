@@ -1,0 +1,64 @@
+<template>
+    <lightning-card title="Weekly Timesheet">
+        <div class="slds-p-horizontal_medium">
+            <div class="slds-m-bottom_small">
+                <lightning-button-group>
+                    <lightning-button label="Previous Week" onclick={handlePreviousWeek}></lightning-button>
+                    <lightning-button label="Next Week" onclick={handleNextWeek}></lightning-button>
+                </lightning-button-group>
+                <span>{dateRange}</span>
+            </div>
+
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <template for:each={weekDates} for:item="day">
+                            <th key={day.date}>{day.label} {day.formatDate}</th>
+                        </template>
+                        <th>Total</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={timesheetRows} for:item="row">
+                        <tr key={row.projectId}>
+                            <td>{row.projectName}</td>
+                            <template for:each={row.days} for:item="day">
+                                <td key={day.date}>
+                                    <lightning-input
+                                        type="number"
+                                        step="0.25"
+                                        value={day.hours}
+                                        data-project-id={row.projectId}
+                                        data-date={day.date}
+                                        onchange={handleHourChange}
+                                        disabled={submitted}>
+                                    </lightning-input>
+                                </td>
+                            </template>
+                            <td>
+                                <lightning-formatted-number
+                                    value={row.totalHours}
+                                    maximum-fraction-digits="2">
+                                </lightning-formatted-number>
+                            </td>
+                            <td>
+                                <lightning-textarea
+                                    value={row.description}
+                                    data-project-id={row.projectId}
+                                    onchange={handleDescriptionChange}
+                                    disabled={submitted}>
+                                </lightning-textarea>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            <div class="slds-m-top_medium">
+                <lightning-button label="Submit" variant="brand" onclick={handleSubmit} disabled={submitted}></lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>
